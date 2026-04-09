@@ -20,15 +20,15 @@ export async function requireUser() {
       : "authjs.session-token",
   });
 
-  if (!decoded?.id) {
+  if (!decoded || !decoded.id) {
     const { redirect } = await import("next/navigation");
     redirect("/");
   }
 
   return {
-    id: decoded.id as string,
-    name: (decoded.name as string) ?? null,
-    email: (decoded.email as string) ?? null,
-    role: (decoded.role as string) ?? "user",
+    id: decoded!.id as string,
+    name: (decoded!.name as string) ?? null,
+    email: (decoded!.email as string) ?? null,
+    role: (decoded!.role as string) ?? "user",
   };
 }

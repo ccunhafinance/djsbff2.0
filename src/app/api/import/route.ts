@@ -1,5 +1,5 @@
 import { getApiUser } from "@/lib/api-auth";
-import { prisma } from "@/lib/prisma";
+import { importFromUrl } from "@/lib/platforms/import-service";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -22,47 +22,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid source" }, { status: 400 });
   }
 
-  const playlistName = extractNameFromUrl(url, source);
-
-  const playlist = await prisma.playlist.create({
-    data: {
-      name: playlistName,
-      source,
-      sourceUrl: url,
-      isImported: true,
-      userId: user.id,
-    },
-  });
-
-  return NextResponse.json({
-    id: playlist.id,
-    name: playlist.name,
-    trackCount: 0,
-    message:
-      "Playlist registered. Track import from platform APIs will be available in the next update.",
-  });
-}
-
-function extractNameFromUrl(url: string, source: string): string {
   try {
-    const parsed = new URL(url);
-    const pathParts = parsed.pathname.split("/").filter(Boolean);
-
-    if (source === "spotify" && pathParts.length >= 2) {
-      return `Spotify: ${pathParts[pathParts.length - 1]}`;
-    }
-    if (source === "youtube") {
-      const listId = parsed.searchParams.get("list");
-      return `YouTube: ${listId ?? pathParts[pathParts.length - 1]}`;
-    }
-    if (source === "soundcloud" && pathParts.length >= 2) {
-      return `SoundCloud: ${pathParts.join("/")}`;
-    }
-    if (source === "deezer" && pathParts.length >= 2) {
-      return `Deezer: ${pathParts[pathParts.length - 1]}`;
-    }
-  } catch {
-    // URL parse failed
+    const result = await importFromUrl(url, source, user.id);
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error("[import] Error:", error);
+    const message = error instanceof Error ? error.message : "Import failed";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
-  return `${source} import - ${new Date().toLocaleDateString()}`;
 }
