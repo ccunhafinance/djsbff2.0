@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { requireUser } from "@/lib/get-user";
 import { prisma } from "@/lib/prisma";
 import {
   Card,
@@ -10,16 +10,16 @@ import {
 import { ListMusic, Music, Mic2, Download } from "lucide-react";
 
 export default async function DashboardPage() {
-  const session = await auth();
+  const user = await requireUser();
 
   const [playlistCount, trackCount, artistCount] = await Promise.all([
-    prisma.playlist.count({ where: { userId: session!.user!.id } }),
-    prisma.track.count({ where: { userId: session!.user!.id } }),
-    prisma.artist.count({ where: { userId: session!.user!.id } }),
+    prisma.playlist.count({ where: { userId: user.id } }),
+    prisma.track.count({ where: { userId: user.id } }),
+    prisma.artist.count({ where: { userId: user.id } }),
   ]);
 
   const recentPlaylists = await prisma.playlist.findMany({
-    where: { userId: session!.user!.id },
+    where: { userId: user.id },
     orderBy: { createdAt: "desc" },
     take: 5,
     include: { _count: { select: { tracks: true } } },
@@ -36,7 +36,7 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold tracking-tight">
-          Welcome back, {session?.user?.name ?? "DJ"}
+          Welcome back, {user.name ?? "DJ"}
         </h2>
         <p className="text-muted-foreground">
           Here&apos;s an overview of your music library

@@ -12,26 +12,34 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+        try {
+          if (!credentials?.email || !credentials?.password) return null;
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email as string },
-        });
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email as string },
+          });
 
-        if (!user) return null;
+          console.log("[auth] Login attempt:", credentials.email, "User found:", !!user);
 
-        const isValid = compareSync(
-          credentials.password as string,
-          user.password
-        );
-        if (!isValid) return null;
+          if (!user) return null;
 
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-        };
+          const isValid = compareSync(
+            credentials.password as string,
+            user.password
+          );
+          console.log("[auth] Password valid:", isValid);
+          if (!isValid) return null;
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+          };
+        } catch (error) {
+          console.error("[auth] Error in authorize:", error);
+          return null;
+        }
       },
     }),
   ],

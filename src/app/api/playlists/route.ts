@@ -1,10 +1,10 @@
-import { auth } from "@/lib/auth";
+import { getApiUser } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const user = await getApiUser();
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -19,7 +19,7 @@ export async function POST(req: Request) {
       name: name.trim(),
       description: description?.trim() || null,
       source: "custom",
-      userId: session.user.id,
+      userId: user.id,
     },
   });
 
@@ -27,13 +27,13 @@ export async function POST(req: Request) {
 }
 
 export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const user = await getApiUser();
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const playlists = await prisma.playlist.findMany({
-    where: { userId: session.user.id },
+    where: { userId: user.id },
     orderBy: { updatedAt: "desc" },
     include: { _count: { select: { tracks: true } } },
   });

@@ -1,10 +1,10 @@
-import { auth } from "@/lib/auth";
+import { getApiUser } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const user = await getApiUser();
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -22,8 +22,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid source" }, { status: 400 });
   }
 
-  // For Phase 1, we create a placeholder playlist from the URL
-  // In Phase 2, we'll integrate with actual platform APIs
   const playlistName = extractNameFromUrl(url, source);
 
   const playlist = await prisma.playlist.create({
@@ -32,7 +30,7 @@ export async function POST(req: Request) {
       source,
       sourceUrl: url,
       isImported: true,
-      userId: session.user.id,
+      userId: user.id,
     },
   });
 

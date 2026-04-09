@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { requireUser } from "@/lib/get-user";
 import { prisma } from "@/lib/prisma";
 import {
   Card,
@@ -14,10 +14,10 @@ import Link from "next/link";
 import { CreatePlaylistDialog } from "@/components/create-playlist-dialog";
 
 export default async function PlaylistsPage() {
-  const session = await auth();
+  const user = await requireUser();
 
   const playlists = await prisma.playlist.findMany({
-    where: { userId: session!.user!.id },
+    where: { userId: user.id },
     orderBy: { updatedAt: "desc" },
     include: { _count: { select: { tracks: true } } },
   });

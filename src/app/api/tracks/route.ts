@@ -1,10 +1,10 @@
-import { auth } from "@/lib/auth";
+import { getApiUser } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const user = await getApiUser();
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     const artist = await prisma.artist.upsert({
       where: {
         userId_name_source: {
-          userId: session.user.id,
+          userId: user.id,
           name: artistName,
           source,
         },
@@ -33,7 +33,7 @@ export async function POST(req: Request) {
       create: {
         name: artistName,
         source,
-        userId: session.user.id,
+        userId: user.id,
       },
     });
     artistId = artist.id;
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
       sourceUrl: sourceUrl ?? null,
       duration: duration ?? null,
       artistId: artistId ?? null,
-      userId: session.user.id,
+      userId: user.id,
     },
     include: { artist: true },
   });
@@ -70,13 +70,13 @@ export async function POST(req: Request) {
 }
 
 export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const user = await getApiUser();
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const tracks = await prisma.track.findMany({
-    where: { userId: session.user.id },
+    where: { userId: user.id },
     orderBy: { createdAt: "desc" },
     include: { artist: true },
   });

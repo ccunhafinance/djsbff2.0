@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { requireUser } from "@/lib/get-user";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import {
@@ -28,10 +28,10 @@ export default async function PlaylistDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const session = await auth();
+  const user = await requireUser();
 
   const playlist = await prisma.playlist.findFirst({
-    where: { id, userId: session!.user!.id },
+    where: { id, userId: user.id },
     include: {
       tracks: {
         orderBy: { position: "asc" },

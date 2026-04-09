@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { requireUser } from "@/lib/get-user";
 import { prisma } from "@/lib/prisma";
 import {
   Card,
@@ -11,10 +11,10 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 export default async function ArtistsPage() {
-  const session = await auth();
+  const user = await requireUser();
 
   const artists = await prisma.artist.findMany({
-    where: { userId: session!.user!.id },
+    where: { userId: user.id },
     orderBy: { name: "asc" },
     include: { _count: { select: { tracks: true } } },
   });

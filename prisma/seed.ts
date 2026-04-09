@@ -18,7 +18,7 @@ async function main() {
       data: {
         email: "isontheedgee@gmail.com",
         name: "Admin",
-        password: hashSync("minhasenha", 12),
+        password: hashSync("m1nh4s3nh4", 12),
         role: "admin",
       },
     });
